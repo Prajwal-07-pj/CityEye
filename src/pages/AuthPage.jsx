@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { Mail, Lock, UserPlus } from "lucide-react";
 
@@ -37,7 +38,7 @@ export default function AuthPage({ C, ui, onAuth }) {
             ))}
           </div>
           <div className="mb-5">
-            <div className="text-lg font-display font-bold" style={{ color: C.ink }}>{mode === "login" ? "Welcome back" : "Join NagarNetra"}</div>
+            <div className="text-lg font-display font-bold" style={{ color: C.ink }}>{mode === "login" ? "Welcome back" : "Join CityEye"}</div>
             <div className="text-xs mt-1" style={{ color: C.sub }}>{mode === "login" ? "Use the ID and password issued by your upper class." : "Citizen accounts can report and track civic issues."}</div>
           </div>
           <form onSubmit={submit} className="flex flex-col gap-3">

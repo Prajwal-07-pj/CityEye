@@ -174,147 +174,57 @@ const IconFor = ({ category, size = 18, ...rest }) => {
 
 function Logo({ dark = false, size = 28 }) {
   return (
-    <div className="flex items-center gap-2 select-none">
-      <div className="rounded-xl flex items-center justify-center" style={{ width: size + 14, height: size + 14, background: `linear-gradient(135deg, ${C.blue}, ${C.navy})` }}>
-        <Eye size={size} color="white" strokeWidth={2.2} />
-      </div>
-      <span className="font-display font-700 text-xl tracking-tight" style={{ color: dark ? "white" : C.navy, fontWeight: 700 }}>
-        Nagar<span style={{ color: C.blue }}>Netra</span>
-      </span>
-    </div>
+    <img src="/logo.png" alt="CityEye" className="object-contain" style={{ width: size * 4.2, height: size * 1.8, filter: dark ? "brightness(0) invert(1)" : "none" }} />
   );
 }
 
 function PriorityBadge({ priority }) {
   const color = PRIORITY_COLOR[priority] || C.sub;
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: color + "1A", color }}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-      {priority}
-    </span>
-  );
+  return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: color + "1A", color }}><span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />{priority}</span>;
 }
 
 function StatusBadge({ status }) {
-  const map = {
-    Submitted: C.sub, Reviewed: C.blueLight, Assigned: C.blue, "In Progress": C.orange,
-    "Awaiting Verification": "#8B5CF6", Resolved: C.green, "Rework Required": C.red, Rejected: C.sub,
-  };
+  const map = { Submitted: C.sub, Reviewed: C.blueLight, Assigned: C.blue, "In Progress": C.orange, "Awaiting Verification": "#8B5CF6", Resolved: C.green, "Rework Required": C.red, Rejected: C.sub };
   const color = map[status] || C.sub;
-  return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: color + "1A", color }}>
-      {status}
-    </span>
-  );
+  return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: color + "1A", color }}>{status}</span>;
 }
 
 function Card({ children, className = "", style = {}, ...rest }) {
-  return (
-    <div className={`rounded-2xl bg-white border ${className}`} style={{ borderColor: C.border, boxShadow: "0 1px 2px rgba(15,27,45,0.04)", ...style }} {...rest}>
-      {children}
-    </div>
-  );
+  return <div className={`rounded-2xl bg-white border ${className}`} style={{ borderColor: C.border, boxShadow: "0 1px 2px rgba(15,27,45,0.04)", ...style }} {...rest}>{children}</div>;
 }
 
 function Btn({ children, variant = "primary", className = "", icon: I, ...rest }) {
   const base = "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.98]";
-  const styles = {
-    primary: { background: C.blue, color: "white" },
-    dark: { background: C.navy, color: "white" },
-    outline: { background: "white", color: C.navy, border: `1.5px solid ${C.border}` },
-    ghost: { background: "transparent", color: C.sub },
-    danger: { background: C.red, color: "white" },
-    success: { background: C.green, color: "white" },
-    warn: { background: C.orange, color: "white" },
-  };
-  return (
-    <button className={`${base} ${className} hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed`} style={styles[variant]} {...rest}>
-      {I && <I size={16} />}
-      {children}
-    </button>
-  );
+  const styles = { primary: { background: C.blue, color: "white" }, dark: { background: C.navy, color: "white" }, outline: { background: "white", color: C.navy, border: `1.5px solid ${C.border}` }, ghost: { background: "transparent", color: C.sub }, danger: { background: C.red, color: "white" }, success: { background: C.green, color: "white" }, warn: { background: C.orange, color: "white" } };
+  return <button className={`${base} ${className} hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed`} style={styles[variant]} {...rest}>{I && <I size={16} />}{children}</button>;
 }
 
 function Toast({ message, onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3200);
-    return () => clearTimeout(t);
-  }, []);
-  return (
-    <div className="fixed bottom-6 right-6 z-[999] fade-up">
-      <div className="flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl" style={{ background: C.navy, color: "white" }}>
-        <CheckCircle2 size={20} color={C.green} />
-        <span className="text-sm font-medium">{message}</span>
-        <button onClick={onClose}><X size={15} /></button>
-      </div>
-    </div>
-  );
+  useEffect(() => { const timer = setTimeout(onClose, 3200); return () => clearTimeout(timer); }, []);
+  return <div className="fixed bottom-6 right-6 z-[999] fade-up"><div className="flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl" style={{ background: C.navy, color: "white" }}><CheckCircle2 size={20} color={C.green} /><span className="text-sm font-medium">{message}</span><button onClick={onClose}><X size={15} /></button></div></div>;
 }
 
 function StatCard({ label, value, color = C.navy, icon: I }) {
-  return (
-    <Card className="p-5 flex items-center justify-between">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: C.sub }}>{label}</div>
-        <div className="text-3xl font-display font-700 mt-1" style={{ color, fontWeight: 700 }}>{value}</div>
-      </div>
-      {I && <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: color + "14" }}><I size={20} color={color} /></div>}
-    </Card>
-  );
+  return <Card className="p-5 flex items-center justify-between"><div><div className="text-xs font-semibold uppercase tracking-wide" style={{ color: C.sub }}>{label}</div><div className="text-3xl font-display font-700 mt-1" style={{ color, fontWeight: 700 }}>{value}</div></div>{I && <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: color + "14" }}><I size={20} color={color} /></div>}</Card>;
 }
 
-/* Abstract stylized city map with markers */
 function CityMap({ markers = [], onMarkerClick, height = 320, selectable = false, pin, onSelectPin, highlightId }) {
   const ref = useRef(null);
-  const handleClick = (e) => {
+  const handleClick = (event) => {
     if (!selectable || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    onSelectPin && onSelectPin({ x, y });
+    onSelectPin && onSelectPin({ x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 });
   };
-  return (
-    <div
-      ref={ref}
-      onClick={handleClick}
-      className="relative w-full rounded-2xl overflow-hidden select-none"
-      style={{ height, background: `linear-gradient(180deg, ${C.navyDeep}, ${C.navy})`, cursor: selectable ? "crosshair" : "default" }}
-    >
-      <svg className="absolute inset-0 w-full h-full opacity-30" preserveAspectRatio="none" viewBox="0 0 100 100">
-        {[10, 25, 40, 55, 70, 85].map((v) => (
-          <line key={"h" + v} x1="0" y1={v} x2="100" y2={v} stroke="#4E93F7" strokeWidth="0.3" />
-        ))}
-        {[10, 25, 40, 55, 70, 85].map((v) => (
-          <line key={"v" + v} x1={v} y1="0" x2={v} y2="100" stroke="#4E93F7" strokeWidth="0.3" />
-        ))}
-        <circle cx="30" cy="35" r="14" fill="#1E6FEB" opacity="0.08" />
-        <circle cx="72" cy="65" r="18" fill="#1E6FEB" opacity="0.08" />
-      </svg>
-      {markers.map((m) => (
-        <button
-          key={m.id}
-          onClick={(e) => { e.stopPropagation(); onMarkerClick && onMarkerClick(m); }}
-          className="absolute -translate-x-1/2 -translate-y-1/2 group"
-          style={{ left: `${m.x}%`, top: `${m.y}%` }}
-        >
-          <div
-            className={`rounded-full border-2 border-white flex items-center justify-center ${highlightId === m.id ? "pulse" : ""}`}
-            style={{ width: highlightId === m.id ? 22 : 16, height: highlightId === m.id ? 22 : 16, background: PRIORITY_COLOR[m.priority] || C.blue, boxShadow: "0 2px 6px rgba(0,0,0,0.4)" }}
-          />
-        </button>
-      ))}
-      {pin && (
-        <div className="absolute -translate-x-1/2 -translate-y-full" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}>
-          <MapPin size={34} color={C.orange} fill={C.orange} strokeWidth={1} />
-        </div>
-      )}
-      {selectable && (
-        <div className="absolute bottom-3 left-3 right-3 text-center text-xs text-white/70 bg-black/30 rounded-lg py-1.5 backdrop-blur-sm">
-          Tap anywhere on the map to move the location pin
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={ref} onClick={handleClick} className="relative w-full rounded-2xl overflow-hidden select-none" style={{ height, background: `linear-gradient(180deg, ${C.navyDeep}, ${C.navy})`, cursor: selectable ? "crosshair" : "default" }}>
+    <svg className="absolute inset-0 w-full h-full opacity-30" preserveAspectRatio="none" viewBox="0 0 100 100">
+      {[10, 25, 40, 55, 70, 85].map((value) => <line key={`h${value}`} x1="0" y1={value} x2="100" y2={value} stroke="#4E93F7" strokeWidth="0.3" />)}
+      {[10, 25, 40, 55, 70, 85].map((value) => <line key={`v${value}`} x1={value} y1="0" x2={value} y2="100" stroke="#4E93F7" strokeWidth="0.3" />)}
+      <circle cx="30" cy="35" r="14" fill="#1E6FEB" opacity="0.08" /><circle cx="72" cy="65" r="18" fill="#1E6FEB" opacity="0.08" />
+    </svg>
+    {markers.map((marker) => <button key={marker.id} onClick={(event) => { event.stopPropagation(); onMarkerClick && onMarkerClick(marker); }} className="absolute -translate-x-1/2 -translate-y-1/2 group" style={{ left: `${marker.x}%`, top: `${marker.y}%` }}><div className={`rounded-full border-2 border-white flex items-center justify-center ${highlightId === marker.id ? "pulse" : ""}`} style={{ width: highlightId === marker.id ? 22 : 16, height: highlightId === marker.id ? 22 : 16, background: PRIORITY_COLOR[marker.priority] || C.blue, boxShadow: "0 2px 6px rgba(0,0,0,0.4)" }} /></button>)}
+    {pin && <div className="absolute -translate-x-1/2 -translate-y-full" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}><MapPin size={34} color={C.orange} fill={C.orange} strokeWidth={1} /></div>}
+    {selectable && <div className="absolute bottom-3 left-3 right-3 text-center text-xs text-white/70 bg-black/30 rounded-lg py-1.5 backdrop-blur-sm">Tap anywhere on the map to move the location pin</div>}
+  </div>;
 }
 
 function BeforeAfterSlider({ before, after }) {
@@ -506,7 +416,7 @@ function LegacyLandingPage({ onEnter }) {
             See the problem.<br />Track the action.<br />Verify the change.
           </h1>
           <p className="text-base leading-relaxed mb-8 max-w-md" style={{ color: C.sub }}>
-            NagarNetra connects citizens, city administration, field workers, and officers on one platform — so a reported problem is never lost, and every fix is verified.
+            CityEye connects citizens, city administration, field workers, and officers on one platform — so a reported problem is never lost, and every fix is verified.
           </p>
           <div className="flex flex-wrap gap-3">
             <Btn variant="primary" icon={Plus} className="!py-3.5 !px-6" onClick={() => onEnter("login")}>Report a Problem</Btn>
@@ -525,7 +435,7 @@ function LegacyLandingPage({ onEnter }) {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-24">
-        <h2 className="font-display text-3xl mb-2" style={{ color: C.navy, fontWeight: 700 }}>How NagarNetra works</h2>
+        <h2 className="font-display text-3xl mb-2" style={{ color: C.navy, fontWeight: 700 }}>How CityEye works</h2>
         <p className="mb-10 text-sm" style={{ color: C.sub }}>A closed loop from the first photo to a verified fix.</p>
         <div className="grid md:grid-cols-5 gap-5">
           {steps.map((s) => (
@@ -599,7 +509,7 @@ function LegacyLoginPage({ onAuth }) {
             ))}
           </div>
           <div className="mb-5">
-            <div className="text-lg font-display font-bold" style={{ color: C.ink }}>{mode === "login" ? "Welcome back" : "Join NagarNetra"}</div>
+            <div className="text-lg font-display font-bold" style={{ color: C.ink }}>{mode === "login" ? "Welcome back" : "Join CityEye"}</div>
             <div className="text-xs mt-1" style={{ color: C.sub }}>{mode === "login" ? "Use the ID and password issued by your upper class." : "Citizen accounts can report and track civic issues."}</div>
           </div>
           <form onSubmit={submit} className="flex flex-col gap-3">
@@ -635,7 +545,7 @@ function CitizenHome({ reports, citizenName, onNavigate, onOpenReport }) {
       <Card className="p-10 mb-8 relative overflow-hidden" style={{ background: `linear-gradient(120deg, ${C.navy}, #123A6B)` }}>
         <div className="relative z-10 max-w-lg">
           <h1 className="font-display text-3xl text-white mb-3" style={{ fontWeight: 700 }}>See a problem? Help fix it.</h1>
-          <p className="text-white/70 text-sm mb-6">Snap a photo, drop a pin, and NagarNetra takes it from there — all the way to a verified fix.</p>
+          <p className="text-white/70 text-sm mb-6">Snap a photo, drop a pin, and CityEye takes it from there — all the way to a verified fix.</p>
           <Btn variant="primary" icon={Plus} className="!py-3.5 !px-6" onClick={() => onNavigate("citizen-report")}>Report a Civic Issue</Btn>
         </div>
         <Eye size={220} color="white" strokeWidth={0.5} className="absolute -right-10 -bottom-16 opacity-10" />
@@ -1092,7 +1002,7 @@ function AdminDashboard({ reports, onNavigate, onOpenReport }) {
   const critical = reports.filter((r) => r.priority === "Critical").length;
   return (
     <div className="p-8">
-      <h1 className="font-display text-2xl mb-1" style={{ color: C.navy, fontWeight: 700 }}>NagarNetra Command Center</h1>
+      <h1 className="font-display text-2xl mb-1" style={{ color: C.navy, fontWeight: 700 }}>CityEye Command Center</h1>
       <p className="text-sm mb-6" style={{ color: C.sub }}>City-wide visibility into every reported civic issue.</p>
       <div className="grid sm:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         <StatCard label="Total Reports" value={total} color={C.navy} icon={FileText} />
@@ -1285,7 +1195,7 @@ function AdminIssueReview({ report, onUpdate, notify }) {
       <Card className="p-5 mt-6" style={{ background: `linear-gradient(120deg, ${C.blue}0D, transparent)`, borderColor: C.blue + "40" }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: C.blue }}><Eye size={14} color="white" /></div>
-          <span className="font-semibold text-sm" style={{ color: C.navy }}>NagarNetra Smart Priority</span>
+          <span className="font-semibold text-sm" style={{ color: C.navy }}>CityEye Smart Priority</span>
         </div>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs" style={{ color: C.sub }}>Suggested Priority:</span>
@@ -1717,7 +1627,7 @@ function NotificationsPage({ notifications }) {
 }
 
 /* ============================= APP ROOT ============================= */
-export default function NagarNetraApp() {
+export default function CityEyeApp() {
   const [reports, setReports] = useState(seedReports);
   const [view, setView] = useState("landing");
   const [role, setRole] = useState(null);
@@ -1800,7 +1710,7 @@ export default function NagarNetraApp() {
     else setView("citizen-track");
   };
 
-  if (view === "landing") return <><style>{FONT_IMPORT}</style><LandingPage C={C} ui={{ Logo, Btn, Card, CityMap }} priorities={PRIORITIES} onEnter={setView} /></>;
+  if (view === "landing") return <><style>{FONT_IMPORT}</style><LandingPage C={C} ui={{ Logo, Btn, Card }} onEnter={setView} /></>;
   if (view === "login") return <><style>{FONT_IMPORT}</style><AuthPage C={C} ui={{ Logo, Card, Btn }} onAuth={handleAuth} /></>;
 
   const navMap = { citizen: CITIZEN_NAV, admin: ADMIN_NAV, worker: WORKER_NAV, officer: OFFICER_NAV };
@@ -1838,60 +1748,4 @@ export default function NagarNetraApp() {
     </div>
   );
 
-  return (
-    <div style={{ background: C.bg, minHeight: "100vh" }}>
-      <style>{FONT_IMPORT}</style>
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-
-      {role === "citizen" && (
-        <>
-          <TopNav role="Citizen" active={view} onNavigate={setView} onLogout={handleLogout} items={CITIZEN_NAV} notifCount={notifications.citizen.length} />
-          {view === "citizen-home" && <CitizenHome reports={reports} citizenName={citizenName} onNavigate={setView} onOpenReport={openReport} />}
-          {view === "citizen-report" && <ReportWizard onSubmit={handleCitizenSubmit} citizenName={citizenName} />}
-          {view === "citizen-myreports" && <CitizenMyReports reports={reports} citizenName={citizenName} onOpenReport={openReport} />}
-          {view === "citizen-nearby" && <CitizenHome reports={reports} citizenName={citizenName} onNavigate={setView} onOpenReport={openReport} />}
-          {view === "citizen-track" && selectedReport && <CitizenReportDetail report={selectedReport} onFeedback={handleFeedback} />}
-          {view === "notifications" && <NotificationsPage notifications={notifications.citizen} />}
-        </>
-      )}
-
-      {role === "admin" && (
-        <>
-          <TopNav role="Admin" active={activeTop} onNavigate={setView} onLogout={handleLogout} items={ADMIN_NAV.slice(0, 4)} notifCount={notifications.admin.length} />
-          <div className="flex">
-            <SideNav items={ADMIN_NAV} active={view} onNavigate={setView} />
-            <div className="flex-1">
-              {view === "admin-dashboard" && <AdminDashboard reports={reports} onNavigate={setView} onOpenReport={openReport} />}
-              {view === "admin-issues" && <AdminAllIssues reports={reports} onOpenReport={openReport} />}
-              {view === "admin-map" && <AdminMapView reports={reports} onOpenReport={openReport} />}
-              {view === "admin-review" && selectedReport && <AdminIssueReview report={selectedReport} onUpdate={onAdminAssign} notify={handleAdminNotify} />}
-              {view === "admin-workers" && <AdminWorkers reports={reports} />}
-              {view === "admin-analytics" && <AdminAnalytics reports={reports} />}
-              {view === "admin-heatmap" && <AdminHeatmap reports={reports} />}
-              {view === "notifications" && <NotificationsPage notifications={notifications.admin} />}
-            </div>
-          </div>
-        </>
-      )}
-
-      {role === "worker" && (
-        <>
-          <TopNav role="Worker" active={view} onNavigate={setView} onLogout={handleLogout} items={WORKER_NAV} notifCount={notifications.worker.length} />
-          {view === "worker-tasks" && <WorkerDashboard reports={reports} workerName={workerName} onOpenTask={openReport} />}
-          {view === "worker-task" && selectedReport && <WorkerTaskPage report={selectedReport} onUpdate={updateReport} onGoComplete={(id) => { setSelectedId(id); setView("worker-complete"); }} />}
-          {view === "worker-complete" && selectedReport && <WorkerCompletionUpload report={selectedReport} onSubmit={handleWorkerComplete} />}
-          {view === "notifications" && <NotificationsPage notifications={notifications.worker} />}
-        </>
-      )}
-
-      {role === "officer" && (
-        <>
-          <TopNav role="Officer" active={view} onNavigate={setView} onLogout={handleLogout} items={OFFICER_NAV} notifCount={notifications.officer.length} />
-          {view === "officer-verify" && <OfficerDashboard reports={reports} onOpenVerify={openReport} />}
-          {view === "officer-review" && selectedReport && <OfficerVerifyDetail report={selectedReport} onDecision={handleOfficerDecision} />}
-          {view === "notifications" && <NotificationsPage notifications={notifications.officer} />}
-        </>
-      )}
-    </div>
-  );
 }

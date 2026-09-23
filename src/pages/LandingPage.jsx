@@ -1,9 +1,8 @@
-import { useMemo } from "react";
 import {
   Camera, ClipboardList, Wrench, ShieldCheck, TrendingUp, Plus, Search,
 } from "lucide-react";
 
-export default function LandingPage({ C, ui, priorities, onEnter }) {
+export default function LandingPage({ C, ui, onEnter }) {
   const steps = [
     { n: "01", t: "Report", d: "Citizens capture and submit civic problems in under two minutes.", icon: Camera },
     { n: "02", t: "Assign", d: "Administration reviews, prioritizes, and assigns the issue.", icon: ClipboardList },
@@ -11,8 +10,6 @@ export default function LandingPage({ C, ui, priorities, onEnter }) {
     { n: "04", t: "Verify", d: "Officers verify the work using before/after completion evidence.", icon: ShieldCheck },
     { n: "05", t: "Improve", d: "Citizens see the result and give feedback that shapes the city.", icon: TrendingUp },
   ];
-  const markers = useMemo(() => Array.from({ length: 14 }).map((_, i) => ({ id: i, x: 10 + Math.random() * 80, y: 10 + Math.random() * 80, priority: priorities[i % 4] })), [priorities]);
-
   return (
     <div style={{ background: C.bg }}>
       <div className="border-b bg-white" style={{ borderColor: C.border }}>
@@ -30,7 +27,7 @@ export default function LandingPage({ C, ui, priorities, onEnter }) {
             See the problem.<br />Track the action.<br />Verify the change.
           </h1>
           <p className="text-base leading-relaxed mb-8 max-w-md" style={{ color: C.sub }}>
-            NagarNetra connects citizens, city administration, field workers, and officers on one platform — so a reported problem is never lost, and every fix is verified.
+            CityEye connects citizens, city administration, field workers, and officers on one platform — so a reported problem is never lost, and every fix is verified.
           </p>
           <div className="flex flex-wrap gap-3">
             <ui.Btn variant="primary" icon={Plus} className="!py-3.5 !px-6" onClick={() => onEnter("login")}>Report a Problem</ui.Btn>
@@ -42,10 +39,10 @@ export default function LandingPage({ C, ui, priorities, onEnter }) {
             ))}
           </div>
         </div>
-        <ui.CityMap markers={markers} height={420} />
+        <img src="/hero.png" alt="CityEye civic issue map" className="w-full h-[420px] rounded-2xl object-cover" />
       </div>
       <div className="max-w-7xl mx-auto px-6 pb-24">
-        <h2 className="font-display text-3xl mb-2" style={{ color: C.navy, fontWeight: 700 }}>How NagarNetra works</h2>
+        <h2 className="font-display text-3xl mb-2" style={{ color: C.navy, fontWeight: 700 }}>How CityEye works</h2>
         <p className="mb-10 text-sm" style={{ color: C.sub }}>A closed loop from the first photo to a verified fix.</p>
         <div className="grid md:grid-cols-5 gap-5">
           {steps.map((step) => (

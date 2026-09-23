@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 export default function DashboardPage({
   role, view, activeTop, notifications, onNavigate, onLogout, onOpenReport, selectedReport,
   reports, citizenName, workerName, onCitizenSubmit, onFeedback, onAdminAssign, onAdminNotify,
