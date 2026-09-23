@@ -1,5 +1,15 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import {
   Eye, MapPin, Camera, Upload, CheckCircle2, Circle, ChevronRight, ChevronLeft,
   Home, FileText, Bell, User, Plus, Search, Filter, LayoutDashboard, Map as MapIcon,
   ClipboardList, Users, Building2, BarChart3, Settings, AlertTriangle, Clock,
@@ -14,6 +24,18 @@ import {
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
 
 /* ============================= DESIGN TOKENS ============================= */
 const C = {
@@ -49,6 +71,8 @@ input[type=range]::-webkit-slider-runnable-track { height: 4px; background: rgba
 @keyframes fadeUp { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
 .fade-up { animation: fadeUp 0.35s ease both; }
 `;
+
+
 
 /* ============================= CONSTANTS ============================= */
 const CATEGORIES = [
@@ -685,14 +709,106 @@ function CitizenMyReports({ reports, citizenName, onOpenReport }) {
   );
 }
 
+
+
+function MapClickHandler({ onLocationChange }) {
+  useMapEvents({
+    click(e) {
+      onLocationChange({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+      });
+    },
+  });
+
+  return null;
+}
+
+function RecenterMap({ location }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (location) {
+      map.flyTo(
+        [location.lat, location.lng],
+        17,
+        {
+          duration: 1.2,
+        }
+      );
+    }
+  }, [location, map]);
+
+  return null;
+}
+
 function ReportWizard({ onSubmit, citizenName }) {
   const [step, setStep] = useState(1);
   const [image, setImage] = useState(null);
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [pin, setPin] = useState({ x: 45, y: 50 });
-  const [address] = useState("Near Ganesh Chowk, Ward 12, Main Road");
+
+  const [location, setLocation] = useState({
+    lat: 18.5204,
+    lng: 73.8567,
+  });
+
+  const [address, setAddress] = useState(
+    "Near Ganesh Chowk, Ward 12, Main Road"
+  );
+
   const [submittedReport, setSubmittedReport] = useState(null);
+
+  const handleUseCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+
+      const newLocation = {
+        lat: latitude,
+        lng: longitude,
+      };
+
+      // Update map location
+      setLocation(newLocation);
+
+      // Get address
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+        );
+
+        const data = await response.json();
+
+        setAddress(
+          data.display_name || "Address unavailable"
+        );
+      } catch (error) {
+        console.error("Address lookup failed:", error);
+        setAddress("Address unavailable");
+      }
+    },
+    (error) => {
+      if (error.code === error.PERMISSION_DENIED) {
+        alert("Please allow location access in your browser.");
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        alert("Unable to determine your location.");
+      } else if (error.code === error.TIMEOUT) {
+        alert("Location request timed out.");
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    }
+  );
+};
 
   const canNext = { 1: !!image, 2: category && description.trim().length > 5, 3: true, 4: true }[step];
 
@@ -702,7 +818,12 @@ function ReportWizard({ onSubmit, citizenName }) {
     const report = {
       id, category, title: `${catMeta(category).label} Reported`, description,
       citizenImage: image, workerImage: null,
-      location: { address, ward: 12, lat: "18.5204", lng: "73.8567" },
+      location: {
+  address,
+  ward: 12,
+  lat: location.lat.toString(),
+  lng: location.lng.toString(),
+},
       priority: category === "electrical" ? "High" : "Medium",
       status: "Submitted", department: DEPARTMENTS[0], assignedWorker: null,
       citizen: citizenName, workNotes: "", completionNote: "",
@@ -753,6 +874,8 @@ function ReportWizard({ onSubmit, citizenName }) {
         ))}
       </div>
 
+      
+
       <Card className="p-6 fade-up">
         {step === 1 && (
           <div>
@@ -780,12 +903,82 @@ function ReportWizard({ onSubmit, citizenName }) {
           <div>
             <div className="font-semibold mb-1" style={{ color: C.ink }}>Location</div>
             <div className="flex items-center gap-1.5 text-xs font-medium mb-4" style={{ color: C.green }}><MapPin size={13} /> Location detected</div>
-            <CityMap markers={[]} pin={pin} selectable onSelectPin={setPin} height={260} />
-            <div className="grid sm:grid-cols-2 gap-3 mt-4 text-xs">
-              <div className="p-3 rounded-xl" style={{ background: C.bg }}><div style={{ color: C.sub }}>Address</div><div className="font-semibold mt-0.5" style={{ color: C.ink }}>{address}</div></div>
-              <div className="p-3 rounded-xl" style={{ background: C.bg }}><div style={{ color: C.sub }}>Latitude / Longitude</div><div className="font-semibold mt-0.5" style={{ color: C.ink }}>18.5204, 73.8567</div></div>
-            </div>
-            <Btn variant="outline" icon={Navigation} className="mt-4 !py-2.5 text-xs">Use My Current Location</Btn>
+           <div
+  className="relative w-full overflow-hidden rounded-2xl"
+  style={{ height: 260 }}
+>
+  <MapContainer
+    center={[location.lat, location.lng]}
+    zoom={17}
+    scrollWheelZoom={true}
+    style={{
+      width: "100%",
+      height: "100%",
+    }}
+  >
+    <TileLayer
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      attribution="&copy; OpenStreetMap contributors"
+    />
+
+    <Marker
+      position={[location.lat, location.lng]}
+    />
+
+    <RecenterMap location={location} />
+
+    <MapClickHandler
+      onLocationChange={async (newLocation) => {
+        setLocation(newLocation);
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLocation.lat}&lon=${newLocation.lng}`
+          );
+
+          const data = await response.json();
+
+          setAddress(
+            data.display_name || "Address unavailable"
+          );
+        } catch {
+          setAddress("Address unavailable");
+        }
+      }}
+    />
+  </MapContainer>
+
+  <div
+    className="absolute bottom-3 left-3 right-3 text-center text-xs text-white bg-black/60 rounded-lg py-2"
+    style={{ zIndex: 1000 }}
+  >
+    Tap anywhere on the map to move the location pin
+  </div>
+</div>
+            <div className="p-3 rounded-xl" style={{ background: C.bg }}>
+  <div style={{ color: C.sub }}>
+    Latitude / Longitude
+  </div>
+
+  <div
+    className="font-semibold mt-0.5"
+    style={{ color: C.ink }}
+  >
+    {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+  </div>
+</div>
+            <Btn
+  variant="outline"
+  icon={Navigation}
+  className="mt-4 !py-2.5 text-xs"
+  onClick={handleUseCurrentLocation}
+>
+  Use My Current Location
+</Btn>
+
+
+
+
           </div>
         )}
         {step === 4 && (
