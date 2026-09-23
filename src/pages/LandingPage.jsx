@@ -1,72 +1,89 @@
 import {
-  Camera, ClipboardList, Wrench, ShieldCheck, TrendingUp, Plus, Search,
+  ArrowRight,
+  Camera,
+  CheckCircle2,
+  Construction,
+  FileText,
+  Leaf,
+  Lightbulb,
+  MapPin,
+  MoreHorizontal,
+  Play,
+  Trash2,
+  TreePine,
+  UserRound,
+  Waves,
+  Wrench,
 } from "lucide-react";
+import { createElement } from "react";
 
-export default function LandingPage({ C, ui, onEnter }) {
-  const steps = [
-    { n: "01", t: "Report", d: "Citizens capture and submit civic problems in under two minutes.", icon: Camera },
-    { n: "02", t: "Assign", d: "Administration reviews, prioritizes, and assigns the issue.", icon: ClipboardList },
-    { n: "03", t: "Resolve", d: "Field workers receive tasks and complete the work on ground.", icon: Wrench },
-    { n: "04", t: "Verify", d: "Officers verify the work using before/after completion evidence.", icon: ShieldCheck },
-    { n: "05", t: "Improve", d: "Citizens see the result and give feedback that shapes the city.", icon: TrendingUp },
-  ];
+const workflow = [
+  [Camera, "1. Report Problem", "Take a photo and upload the issue with details."],
+  [FileText, "2. Admin Verifies", "The administrator reviews and verifies the complaint."],
+  [UserRound, "3. Assign Field Worker", "Assigned to the appropriate field worker."],
+  [Wrench, "4. Problem Fixed", "Field worker visits the location and resolves the issue."],
+  [CheckCircle2, "5. Resolved", "The issue is marked as resolved and you can track its status."],
+];
+
+const issueTypes = [
+  [Construction, "Potholes"],
+  [Trash2, "Garbage"],
+  [TreePine, "Fallen Trees"],
+  [Lightbulb, "Broken Streetlights"],
+  [Waves, "Water Logging"],
+  [MoreHorizontal, "Others"],
+];
+
+function Brand() {
+  return <a className="reference-brand" href="#reference-top" aria-label="CityEye home"><span className="reference-brand-mark"><i /></span><strong>CityEye</strong></a>;
+}
+
+function ActionButton({ children, light = false, onClick }) {
+  return <button className={`reference-button ${light ? "reference-button-light" : ""}`} onClick={onClick}>{children}<ArrowRight size={14} /></button>;
+}
+
+export default function LandingPage({ onEnter }) {
   return (
-    <div style={{ background: C.bg }}>
-      <div className="border-b bg-white" style={{ borderColor: C.border }}>
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <ui.Logo />
-          <ui.Btn variant="dark" onClick={() => onEnter("login")}>Sign In</ui.Btn>
+    <main className="reference-landing" id="reference-top">
+      <header className="reference-header">
+        <Brand />
+        <nav className="reference-nav">
+          <a className="is-active" href="#reference-top">Home</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#common-issues">Features</a>
+          <a href="#reference-about">About</a>
+          <a href="#reference-contact">Contact</a>
+        </nav>
+        <div className="reference-auth"><button onClick={() => onEnter("login")}>Sign In</button><ActionButton onClick={() => onEnter("login")}>Get Started</ActionButton></div>
+      </header>
+
+      <section className="reference-hero">
+        <div className="reference-hero-copy">
+          <p className="reference-overline">REPORT TODAY. <span>A CLEANER TOMORROW.</span></p>
+          <h1>See an issue<br />in your city?<br /><em>Report it. Get it fixed.</em></h1>
+          <p className="reference-hero-text">CityEye makes it easy for citizens to report real-world problems like potholes, garbage, fallen trees, broken streetlights and more. Together, we can build cleaner, safer and smarter cities.</p>
+          <div className="reference-hero-actions"><ActionButton onClick={() => onEnter("login")}>Report an Issue</ActionButton><button className="reference-watch"><span><Play size={11} fill="currentColor" /></span>Watch Video</button></div>
         </div>
-      </div>
-      <div className="max-w-7xl mx-auto px-6 pt-16 pb-20 grid lg:grid-cols-2 gap-14 items-center">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6" style={{ background: C.blue + "14", color: C.blue }}>
-            <span className="w-1.5 h-1.5 rounded-full pulse" style={{ background: C.blue }} /> Smart Civic Infrastructure
-          </div>
-          <h1 className="font-display text-5xl leading-[1.05] mb-5" style={{ color: C.navy, fontWeight: 700 }}>
-            See the problem.<br />Track the action.<br />Verify the change.
-          </h1>
-          <p className="text-base leading-relaxed mb-8 max-w-md" style={{ color: C.sub }}>
-            CityEye connects citizens, city administration, field workers, and officers on one platform — so a reported problem is never lost, and every fix is verified.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <ui.Btn variant="primary" icon={Plus} className="!py-3.5 !px-6" onClick={() => onEnter("login")}>Report a Problem</ui.Btn>
-            <ui.Btn variant="outline" icon={Search} className="!py-3.5 !px-6" onClick={() => onEnter("login")}>Track a Report</ui.Btn>
-          </div>
-          <div className="flex gap-10 mt-10">
-            {[['1,248', 'Reports Filed'], ['846', 'Issues Resolved'], ['2.4 Days', 'Avg. Resolution']].map(([value, label]) => (
-              <div key={label}><div className="font-display text-2xl" style={{ color: C.navy, fontWeight: 700 }}>{value}</div><div className="text-xs" style={{ color: C.sub }}>{label}</div></div>
-            ))}
-          </div>
+        <div className="reference-hero-scene">
+          <div className="reference-city-image" />
+          <div className="reference-phone"><div className="reference-notch" /><div className="reference-phone-screen"><div className="reference-phone-title">‹ <strong>Report an Issue</strong></div><div className="reference-pothole" /><div className="reference-report-line"><MapPin size={13} fill="currentColor" /><strong>Pothole</strong><small>Shivajinagar, Pune</small></div><div className="reference-input">Add more details...</div><button>Submit Report</button><div className="reference-home-bar" /></div></div>
+          <div className="reference-scene-note">Cleaner roads.<br />Stronger communities.</div>
         </div>
-        <img src="/hero.png" alt="CityEye civic issue map" className="w-full h-[420px] rounded-2xl object-cover" />
-      </div>
-      <div className="max-w-7xl mx-auto px-6 pb-24">
-        <h2 className="font-display text-3xl mb-2" style={{ color: C.navy, fontWeight: 700 }}>How CityEye works</h2>
-        <p className="mb-10 text-sm" style={{ color: C.sub }}>A closed loop from the first photo to a verified fix.</p>
-        <div className="grid md:grid-cols-5 gap-5">
-          {steps.map((step) => (
-            <ui.Card key={step.n} className="p-5">
-              <div className="text-xs font-bold mb-4" style={{ color: C.blue }}>{step.n}</div>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: C.navy }}><step.icon size={18} color="white" /></div>
-              <div className="font-semibold mb-1.5" style={{ color: C.ink }}>{step.t}</div>
-              <div className="text-xs leading-relaxed" style={{ color: C.sub }}>{step.d}</div>
-            </ui.Card>
-          ))}
-        </div>
-      </div>
-      <div style={{ background: C.navy }}>
-        <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-4 gap-8 text-white">
-          {[
-            ["Citizens", "\u201cI reported it, but I don\u2019t know what happened.\u201d"],
-            ["Administration", "\u201cWe receive many complaints and struggle to organize and prioritize them.\u201d"],
-            ["Field Workers", "\u201cWe need clear location, instructions, and task priority.\u201d"],
-            ["Officers", "\u201cHow do I know the reported work was actually completed?\u201d"],
-          ].map(([role, quote]) => (
-            <div key={role}><div className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: C.blueLight }}>{role}</div><div className="text-sm leading-relaxed text-white/80">{quote}</div></div>
-          ))}
-        </div>
-      </div>
-    </div>
+      </section>
+
+      <section className="reference-workflow" id="how-it-works">
+        <div className="reference-section-heading"><div><p className="reference-overline">HOW CITYEYE WORKS</p><h2>From a report to a real change.</h2></div><p>A simple process that connects<br />citizens, administrators and field workers.</p></div>
+        <div className="reference-steps">{workflow.map(([icon, title, text], index) => <div className="reference-step-wrap" key={title}><article className="reference-step"><div className={`reference-step-icon ${index === 4 ? "is-done" : ""}`}>{createElement(icon, { size: 24 })}</div><h3>{title}</h3><p>{text}</p></article>{index < workflow.length - 1 && <ArrowRight className="reference-step-arrow" size={20} />}</div>)}</div>
+      </section>
+
+      <section className="reference-issues" id="common-issues">
+        <div className="reference-issues-heading"><div><h2>Common Issues</h2><p>Report a wide range of civic issues in your area.</p></div><a href="#reference-contact">View All Categories <ArrowRight size={13} /></a></div>
+        <div className="reference-issue-grid">{issueTypes.map(([icon, label]) => <button className="reference-issue" key={label}>{createElement(icon, { size: 27 })}<span>{label}</span></button>)}</div>
+      </section>
+
+      <section className="reference-cta" id="reference-about"><div className="reference-cta-copy"><p className="reference-overline">A CLEANER, SAFER, SMARTER TOMORROW</p><h2>Let’s build a better<br />Pune, together.</h2><ActionButton light onClick={() => onEnter("login")}>Get Started</ActionButton></div><div className="reference-cta-quote">“Small reports<br />make a big difference.”<span />A Cleaner City<br />A Healthier You</div></section>
+
+      <footer className="reference-footer" id="reference-contact"><Brand /><nav><a href="#reference-top">Home</a><a href="#common-issues">Features</a><a href="#reference-about">About</a><a href="#reference-contact">Contact</a></nav><span>Cleaner Cities. Brighter Tomorrows.</span></footer>
+    </main>
   );
 }
