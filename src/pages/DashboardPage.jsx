@@ -6,7 +6,7 @@ export default function DashboardPage({
 }) {
   const common = { onNavigate, onLogout };
   return (
-    <>
+    <div className="dashboard-shell">
       {role === "citizen" && <>
         <pages.TopNav role="Citizen" active={view} items={nav.citizen} notifCount={notifications.citizen.length} {...common} />
         {view === "citizen-home" && <pages.CitizenHome reports={reports} citizenName={citizenName} onNavigate={onNavigate} onOpenReport={onOpenReport} />}
@@ -45,6 +45,6 @@ export default function DashboardPage({
         {view === "officer-review" && selectedReport && <pages.OfficerVerifyDetail report={selectedReport} onDecision={onOfficerDecision} />}
         {view === "notifications" && <pages.NotificationsPage notifications={notifications.officer} />}
       </>}
-    </>
+    </div>
   );
 }

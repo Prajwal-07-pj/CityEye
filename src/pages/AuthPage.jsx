@@ -19,7 +19,11 @@ export default function AuthPage({ C, ui, onAuth }) {
     }
     setLoading(true);
     try {
-      const response = await fetch(`/api/auth/${mode}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const response = await fetch(`/api/auth/${mode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, email: form.email.trim() }),
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to continue.");
       onAuth(data.user);

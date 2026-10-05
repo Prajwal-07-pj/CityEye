@@ -39,11 +39,11 @@ L.Icon.Default.mergeOptions({
 
 /* ============================= DESIGN TOKENS ============================= */
 const C = {
-  navy: "#0A1C34",
-  navyDeep: "#061224",
-  blue: "#1E6FEB",
-  blueLight: "#4E93F7",
-  bg: "#F4F6F9",
+  navy: "#17332D",
+  navyDeep: "#0D2E24",
+  blue: "#146E52",
+  blueLight: "#3C9272",
+  bg: "#F4F7F5",
   card: "#FFFFFF",
   border: "#E4E9F0",
   ink: "#0F1B2D",
@@ -72,6 +72,21 @@ input[type=range]::-webkit-slider-runnable-track { height: 4px; background: rgba
 .fade-up { animation: fadeUp 0.35s ease both; }
 `;
 
+const AUTH_SESSION_KEY = "cityeye-auth-session";
+
+function readAuthSession() {
+  try {
+    const stored = window.localStorage.getItem(AUTH_SESSION_KEY);
+    if (!stored) return null;
+    const session = JSON.parse(stored);
+    if (!session?.user || !session?.role || !session?.view) return null;
+    return session;
+  } catch (error) {
+    console.error("Unable to restore the CityEye session:", error);
+    return null;
+  }
+}
+
 
 
 /* ============================= CONSTANTS ============================= */
@@ -84,7 +99,6 @@ const CATEGORIES = [
   { id: "drainage", label: "Drainage", icon: Waves },
   { id: "tree", label: "Fallen Tree", icon: TreePine },
   { id: "infra", label: "Public Infrastructure", icon: Building2 },
-  { id: "other", label: "Other", icon: HelpCircle },
 ];
 const catMeta = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
 
@@ -243,14 +257,22 @@ function BeforeAfterSlider({ before, after }) {
   );
 }
 
-function ImageDropzone({ value, onChange }) {
+function ImageDropzone({ value, onChange, validation }) {
   const inputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
   const handleFiles = (files) => {
     const f = files[0];
     if (!f) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+      onChange(null, "Only JPG, PNG, or WebP images are accepted.");
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      onChange(null, "Image must be smaller than 10MB.");
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = (e) => onChange(e.target.result);
+    reader.onload = (e) => onChange(e.target.result, "");
     reader.readAsDataURL(f);
   };
   if (value) {
@@ -274,12 +296,13 @@ function ImageDropzone({ value, onChange }) {
         <ImagePlus size={26} color={C.blue} />
       </div>
       <div className="text-sm font-semibold" style={{ color: C.ink }}>Drag & drop a photo, or click to upload</div>
-      <div className="text-xs" style={{ color: C.sub }}>JPG or PNG, up to 10MB</div>
+      <div className="text-xs" style={{ color: C.sub }}>JPG, PNG, or WebP, up to 10MB</div>
       <div className="flex gap-2 mt-1">
         <span className="text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5" style={{ background: C.navy, color: "white" }}><Camera size={13} /> Use Camera</span>
         <span className="text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5" style={{ background: C.border, color: C.ink }}><Upload size={13} /> Upload File</span>
       </div>
-      <input ref={inputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+      {validation?.message && <div className="text-xs font-medium" style={{ color: C.red }}>{validation.message}</div>}
     </div>
   );
 }
@@ -655,6 +678,7 @@ function RecenterMap({ location }) {
 function ReportWizard({ onSubmit, citizenName }) {
   const [step, setStep] = useState(1);
   const [image, setImage] = useState(null);
+  const [imageValidation, setImageValidation] = useState({ status: "empty", message: "" });
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
 
@@ -720,7 +744,42 @@ function ReportWizard({ onSubmit, citizenName }) {
   );
 };
 
-  const canNext = { 1: !!image, 2: category && description.trim().length > 5, 3: true, 4: true }[step];
+  const selectedCategoryLabel = catMeta(category).label;
+  const categoryMatchesImage = imageValidation.status === "valid" && imageValidation.label === selectedCategoryLabel;
+  const canNext = {
+    1: !!image && imageValidation.status === "valid",
+    2: category && categoryMatchesImage && description.trim().length > 5,
+    3: true,
+    4: true,
+  }[step];
+
+  const handleImageChange = async (dataUrl, fileError = "") => {
+    setImage(dataUrl);
+    setCategory("");
+    if (fileError) {
+      setImageValidation({ status: "error", message: fileError });
+      return;
+    }
+    if (!dataUrl) {
+      setImageValidation({ status: "empty", message: "" });
+      return;
+    }
+    setImageValidation({ status: "checking", message: "Checking whether this is a supported civic issue photo…" });
+    try {
+      const response = await fetch("/api/classify-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Unable to classify this image.");
+      const topPrediction = result.predictions?.[0];
+      if (!topPrediction || topPrediction.score < 0.25) throw new Error("This image does not clearly show one of the supported civic issue categories.");
+      setImageValidation({ status: "valid", label: topPrediction.label, score: topPrediction.score, message: `Detected: ${topPrediction.label}` });
+    } catch (error) {
+      setImageValidation({ status: "error", message: error.message || "Unable to classify this image." });
+    }
+  };
 
   const handleSubmit = () => {
     const id = nextId();
@@ -758,7 +817,7 @@ function ReportWizard({ onSubmit, citizenName }) {
         <p className="text-sm max-w-sm mx-auto mb-8" style={{ color: C.sub }}>Your report has been received and will be reviewed by the administration. You'll be notified at every step.</p>
         <div className="flex justify-center gap-3">
           <Btn variant="primary" onClick={() => onSubmit(submittedReport, "track")}>Track Report</Btn>
-          <Btn variant="outline" onClick={() => { setStep(1); setImage(null); setCategory(""); setDescription(""); setSubmittedReport(null); }}>Report Another Issue</Btn>
+          <Btn variant="outline" onClick={() => { setStep(1); setImage(null); setImageValidation({ status: "empty", message: "" }); setCategory(""); setDescription(""); setSubmittedReport(null); }}>Report Another Issue</Btn>
         </div>
       </div>
     );
@@ -791,7 +850,9 @@ function ReportWizard({ onSubmit, citizenName }) {
           <div>
             <div className="font-semibold mb-1" style={{ color: C.ink }}>Capture the problem</div>
             <p className="text-xs mb-4" style={{ color: C.sub }}>Upload a clear photo of the issue — this helps administration and workers understand it instantly.</p>
-            <ImageDropzone value={image} onChange={setImage} />
+            <ImageDropzone value={image} onChange={handleImageChange} validation={imageValidation} />
+            {imageValidation.status === "checking" && <div className="mt-3 text-xs" style={{ color: C.sub }}>{imageValidation.message}</div>}
+            {imageValidation.status === "error" && <div className="mt-3 text-xs font-medium" style={{ color: C.red }}>{imageValidation.message}</div>}
           </div>
         )}
         {step === 2 && (
@@ -805,6 +866,7 @@ function ReportWizard({ onSubmit, citizenName }) {
                 </button>
               ))}
             </div>
+            {category && !categoryMatchesImage && imageValidation.status === "valid" && <div className="mb-4 text-xs font-medium" style={{ color: C.red }}>This category does not match the uploaded image. Select “{imageValidation.label}”.</div>}
             <label className="text-xs font-semibold" style={{ color: C.sub }}>Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Describe what happened and why it is a problem..." className="w-full mt-2 p-3 rounded-xl border text-sm outline-none" style={{ borderColor: C.border }} />
           </div>
@@ -1628,16 +1690,31 @@ function NotificationsPage({ notifications }) {
 
 /* ============================= APP ROOT ============================= */
 export default function CityEyeApp() {
+  const savedSession = readAuthSession();
   const [reports, setReports] = useState(seedReports);
-  const [view, setView] = useState("landing");
-  const [role, setRole] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
+  const [view, setView] = useState(savedSession?.view || "landing");
+  const [role, setRole] = useState(savedSession?.role || null);
+  const [currentUser, setCurrentUser] = useState(savedSession?.user || null);
+  const [selectedId, setSelectedId] = useState(savedSession?.selectedId || null);
   const [toast, setToast] = useState(null);
   const [notifications, setNotifications] = useState({ citizen: [], admin: [], worker: [], officer: [] });
 
   const citizenName = currentUser?.name || "Rohit Sharma";
   const workerName = "Ramesh Yadav";
+
+  useEffect(() => {
+    if (!currentUser || !role) return;
+    try {
+      window.localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+        user: currentUser,
+        role,
+        view,
+        selectedId,
+      }));
+    } catch (error) {
+      console.error("Unable to save the CityEye session:", error);
+    }
+  }, [currentUser, role, view, selectedId]);
 
   const notify = (audience, text) => {
     setNotifications((prev) => ({ ...prev, [audience]: [{ text, time: Date.now() }, ...prev[audience]] }));
@@ -1649,12 +1726,24 @@ export default function CityEyeApp() {
   };
 
   const handleAuth = (user) => {
+    const authenticatedRole = String(user?.role || "citizen").trim().toLowerCase();
+    const safeRole = ["citizen", "admin", "worker", "officer"].includes(authenticatedRole) ? authenticatedRole : "citizen";
     setCurrentUser(user);
-    setRole(user.role);
-    setView(user.role === "citizen" ? "citizen-home" : user.role === "admin" ? "admin-dashboard" : user.role === "worker" ? "worker-tasks" : "officer-verify");
+    setRole(safeRole);
+    setView(safeRole === "citizen" ? "citizen-home" : safeRole === "admin" ? "admin-dashboard" : safeRole === "worker" ? "worker-tasks" : "officer-verify");
   };
 
-  const handleLogout = () => { setCurrentUser(null); setRole(null); setView("landing"); };
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setRole(null);
+    setView("landing");
+    setSelectedId(null);
+    try {
+      window.localStorage.removeItem(AUTH_SESSION_KEY);
+    } catch (error) {
+      console.error("Unable to clear the CityEye session:", error);
+    }
+  };
 
   const selectedReport = reports.find((r) => r.id === selectedId);
 
