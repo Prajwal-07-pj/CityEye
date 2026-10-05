@@ -66,7 +66,7 @@ export default function LandingPage({ onEnter }) {
         </div>
         <div className="reference-hero-scene">
           <div className="reference-city-image" />
-          <div className="reference-phone"><div className="reference-notch" /><div className="reference-phone-screen"><div className="reference-phone-title">‹ <strong>Report an Issue</strong></div><div className="reference-pothole" /><div className="reference-report-line"><MapPin size={13} fill="currentColor" /><strong>Pothole</strong><small>Shivajinagar, Pune</small></div><div className="reference-input">Add more details...</div><button>Submit Report</button><div className="reference-home-bar" /></div></div>
+          <div className="reference-phone"><div className="reference-notch" /><div className="reference-phone-screen"><div className="reference-phone-title">‹ <strong>Report an Issue</strong></div><img className="reference-pothole" src="/pothole.jpg" alt="Pothole" style={{ width: "100%", objectFit: "cover", display: "block" }} /><div className="reference-report-line"><MapPin size={13} fill="currentColor" /><strong>Pothole</strong><small>Shivajinagar, Pune</small></div><div className="reference-input">Add more details...</div><button>Submit Report</button><div className="reference-home-bar" /></div></div>
           <div className="reference-scene-note">Cleaner roads.<br />Stronger communities.</div>
         </div>
       </section>

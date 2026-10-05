@@ -1,16 +1,22 @@
 /* eslint-disable no-unused-vars */
 import { useState } from "react";
-import { Mail, Lock, UserPlus } from "lucide-react";
+import { ArrowRight, Code2, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
 
 export default function AuthPage({ C, ui, onAuth }) {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ email: "", password: "", name: "" });
+  const [form, setForm] = useState({ email: "", password: "", name: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
     setError("");
+    if (mode === "signup" && form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true);
     try {
       const response = await fetch(`/api/auth/${mode}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
@@ -25,32 +31,30 @@ export default function AuthPage({ C, ui, onAuth }) {
   };
 
   const updateField = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
+  const switchMode = (nextMode) => { setMode(nextMode); setError(""); };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: `linear-gradient(160deg, ${C.navyDeep}, ${C.navy} 60%)` }}>
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-3"><ui.Logo dark size={30} /></div>
-        <p className="text-center text-sm text-white/60 mb-10">See the Problem. Track the Action. Verify the Change.</p>
-        <ui.Card className="p-6" style={{ background: "rgba(255,255,255,0.98)" }}>
-          <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: C.bg }}>
-            {[{ key: "login", label: "Sign in" }, { key: "signup", label: "Create citizen account" }].map((tab) => (
-              <button key={tab.key} onClick={() => { setMode(tab.key); setError(""); }} className="flex-1 rounded-lg py-2 text-xs font-semibold" style={{ background: mode === tab.key ? "white" : "transparent", color: mode === tab.key ? C.navy : C.sub, boxShadow: mode === tab.key ? "0 1px 4px rgba(15,27,45,0.1)" : "none" }}>{tab.label}</button>
-            ))}
-          </div>
-          <div className="mb-5">
-            <div className="text-lg font-display font-bold" style={{ color: C.ink }}>{mode === "login" ? "Welcome back" : "Join CityEye"}</div>
-            <div className="text-xs mt-1" style={{ color: C.sub }}>{mode === "login" ? "Use the ID and password issued by your upper class." : "Citizen accounts can report and track civic issues."}</div>
-          </div>
-          <form onSubmit={submit} className="flex flex-col gap-3">
-            {mode === "signup" && <label className="relative"><UserPlus size={16} color={C.sub} className="absolute left-3 top-3.5" /><input required value={form.name} onChange={updateField("name")} placeholder="Full name" className="w-full rounded-xl border py-3 pl-10 pr-3 text-sm outline-none" style={{ borderColor: C.border }} /></label>}
-            <label className="relative"><Mail size={16} color={C.sub} className="absolute left-3 top-3.5" /><input required type="email" value={form.email} onChange={updateField("email")} placeholder="Email / user ID" className="w-full rounded-xl border py-3 pl-10 pr-3 text-sm outline-none" style={{ borderColor: C.border }} /></label>
-            <label className="relative"><Lock size={16} color={C.sub} className="absolute left-3 top-3.5" /><input required type="password" value={form.password} onChange={updateField("password")} placeholder="Password" className="w-full rounded-xl border py-3 pl-10 pr-3 text-sm outline-none" style={{ borderColor: C.border }} /></label>
-            {error && <div className="rounded-lg px-3 py-2 text-xs" style={{ color: C.red, background: C.red + "12" }}>{error}</div>}
-            <ui.Btn type="submit" disabled={loading} className="w-full mt-2">{loading ? "Checking..." : mode === "login" ? "Sign in securely" : "Create account"}</ui.Btn>
-          </form>
-          <div className="text-[11px] text-center mt-5" style={{ color: C.sub }}>{mode === "login" ? "Admin, field worker, and officer access is issued by administration." : "Staff accounts cannot be created from this page."}</div>
-        </ui.Card>
+    <main className="auth-page">
+      <div className="auth-panel">
+        <div className="auth-brand"><ui.Logo size={40} /></div>
+        <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
+        <p className="auth-subtitle">{mode === "login" ? "Sign in to continue and help make your city better." : "Join CityEye and be a part of a cleaner, safer city."}</p>
+
+        <form onSubmit={submit} className="auth-form">
+          {mode === "signup" && <label className="auth-field"><UserRound size={17} /><input required value={form.name} onChange={updateField("name")} placeholder="Full Name" autoComplete="name" /></label>}
+          <label className="auth-field"><Mail size={17} /><input required type="email" value={form.email} onChange={updateField("email")} placeholder="Email address" autoComplete="email" /></label>
+          <label className="auth-field"><Lock size={17} /><input required type={showPassword ? "text" : "password"} value={form.password} onChange={updateField("password")} placeholder="Password" autoComplete={mode === "login" ? "current-password" : "new-password"} /><button type="button" className="auth-field-action" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></label>
+          {mode === "signup" && <label className="auth-field"><Lock size={17} /><input required type={showConfirmPassword ? "text" : "password"} value={form.confirmPassword} onChange={updateField("confirmPassword")} placeholder="Confirm Password" autoComplete="new-password" /><button type="button" className="auth-field-action" onClick={() => setShowConfirmPassword((value) => !value)} aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}>{showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></label>}
+
+          {mode === "login" ? <div className="auth-options"><label><input type="checkbox" /> <span>Remember me</span></label><button type="button">Forgot password?</button></div> : <label className="auth-terms"><input required type="checkbox" /><span>I agree to the <button type="button">Terms of Service</button> and <button type="button">Privacy Policy</button></span></label>}
+          {error && <div className="auth-error">{error}</div>}
+          <button type="submit" className="auth-submit" disabled={loading}>{loading ? "Checking..." : mode === "login" ? "Sign In" : "Create Account"}<ArrowRight size={18} /></button>
+        </form>
+
+        <div className="auth-divider"><span />OR<span /></div>
+        <div className="auth-socials"><button type="button"><strong className="auth-google">G</strong>Continue with Google</button><button type="button"><Code2 size={19} />Continue with GitHub</button></div>
+        <p className="auth-switch">{mode === "login" ? "Don't have an account?" : "Already have an account?"} <button type="button" onClick={() => switchMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "Sign up" : "Sign in"}</button></p>
       </div>
-    </div>
+    </main>
   );
 }
