@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/index.js",
+    "classifier": "py -3.13 classifier.py",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

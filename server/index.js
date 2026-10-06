@@ -10,8 +10,7 @@ dotenv.config({ path: new URL("./.env", import.meta.url) });
 const app = express();
 const port = process.env.PORT || 5000;
 const mongoUri = process.env.MONGODB_URI || process.env.MONOGODB_URL;
-const hfToken = process.env.HF_TOKEN;
-const imageClassifierModel = "google/siglip-base-patch16-512";
+const classifierUrl = process.env.CLASSIFIER_URL || "http://127.0.0.1:8001/classify";
 const roles = ["citizen", "admin", "worker", "officer"];
 const imageCategories = [
   "Road / Pothole",
@@ -40,33 +39,29 @@ const publicUser = (user) => ({ id: user._id, name: user.name, email: user.email
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
 app.post("/api/classify-image", async (req, res) => {
-  if (!hfToken) return res.status(503).json({ message: "Image classification is not configured. Add HF_TOKEN to server/.env." });
   const imageData = String(req.body?.image || "");
   const match = imageData.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
   if (!match) return res.status(400).json({ message: "A JPG, PNG, or WebP image is required." });
 
   try {
-    const response = await fetch(`https://api-inference.huggingface.co/models/${imageClassifierModel}`, {
+    const response = await fetch(classifierUrl, {
       method: "POST",
-      headers: { Authorization: "Bearer " + hfToken, "Content-Type": "application/json" },
-      body: JSON.stringify({ inputs: match[2], parameters: { candidate_labels: imageCategories } }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: imageData }),
     });
     const result = await response.json();
-    if (!response.ok) {
-      const message = result?.error || "The image classification service could not process this image.";
-      return res.status(response.status === 503 ? 503 : 502).json({ message });
-    }
-    if (!Array.isArray(result)) return res.status(502).json({ message: "The image classification service returned an invalid response." });
-
-    const predictions = result
-      .filter((item) => imageCategories.includes(item.label))
-      .map((item) => ({ label: item.label, score: Number(item.score) }))
-      .sort((a, b) => b.score - a.score);
-    if (!predictions.length) return res.status(502).json({ message: "The classifier did not return a civic issue category." });
+    if (!response.ok) return res.status(response.status === 400 ? 400 : 502).json({ message: result?.message || "The local image classifier failed." });
+    const predictions = Array.isArray(result?.predictions)
+      ? result.predictions.filter((item) => imageCategories.includes(item.label))
+      : [];
+    if (!predictions.length) return res.status(502).json({ message: "The local classifier returned no civic issue categories." });
     res.json({ predictions });
   } catch (error) {
+    const message = error.message?.includes("fetch failed")
+      ? "The local image classifier is not running. Start it with: python classifier.py"
+      : error.message || "The local image classifier could not process this image.";
     console.error("Image classification failed:", error.message);
-    res.status(502).json({ message: "The image classification service is unavailable. Please try again." });
+    res.status(502).json({ message });
   }
 });
 
