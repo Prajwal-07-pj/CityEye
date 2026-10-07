@@ -172,6 +172,37 @@ button, a { font: inherit; }
 
 /* Reference landing page */
 .reference-landing { color: #17232c; background: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+.cityeye-intro { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow: hidden; color: #12212b; background: #f8faf9; animation: cityeye-intro-exit .5s 3.5s cubic-bezier(.22,1,.36,1) forwards; }
+.cityeye-intro-content { position: relative; display: flex; flex-direction: column; align-items: center; width: min(92vw, 360px); text-align: center; }
+.cityeye-intro-brand { display: flex; align-items: center; gap: 10px; opacity: 0; animation: cityeye-intro-brand .45s .08s ease-out forwards; }
+.cityeye-intro-brand strong { font-size: 22px; letter-spacing: -.5px; }
+.cityeye-intro-eye { width: 34px; height: 34px; position: relative; display: grid; place-items: center; border: 2px solid #12212b; border-radius: 50%; }
+.cityeye-intro-eye:before { content: ''; width: 15px; height: 15px; border: 1.5px solid #12212b; border-radius: 50%; }
+.cityeye-intro-eye i { width: 5px; height: 5px; position: absolute; border-radius: 50%; background: #087f5b; animation: cityeye-intro-pulse 1.4s ease-in-out infinite; }
+.cityeye-intro-brand + p { margin: 9px 0 0; color: #64748b; font-size: 11px; opacity: 0; animation: cityeye-intro-copy .4s .2s ease-out forwards; }
+.cityeye-intro-city { width: 300px; height: 150px; margin-top: 11px; opacity: 0; transform: perspective(420px) rotateX(52deg) rotateZ(-7deg) scale(.7); animation: cityeye-intro-city 1.25s .8s cubic-bezier(.22,1,.36,1) forwards; }
+.cityeye-intro-city svg { width: 100%; height: 100%; overflow: visible; }
+.cityeye-road { fill: none; stroke: #12212b; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 280; stroke-dashoffset: 280; animation: cityeye-intro-draw 1.2s 1s ease-out forwards; }
+.cityeye-road-soft { stroke: #087f5b; opacity: .35; stroke-width: 1; animation-delay: 1.2s; }
+.cityeye-buildings { fill: #12212b; opacity: 0; transform-origin: center; animation: cityeye-intro-buildings .8s 1.8s ease-out forwards; }
+.cityeye-intro-points circle { opacity: 0; transform-box: fill-box; transform-origin: center; animation: cityeye-intro-point .35s ease-out forwards; }
+.cityeye-intro-points circle:nth-child(1) { animation-delay: 2.05s; }.cityeye-intro-points circle:nth-child(2) { animation-delay: 2.25s; }.cityeye-intro-points circle:nth-child(3) { animation-delay: 2.45s; }.cityeye-intro-points circle:nth-child(4) { animation-delay: 2.65s; }.cityeye-intro-points circle:nth-child(5) { animation-delay: 2.85s; }
+.cityeye-intro-points .is-warning, .cityeye-intro-issues .is-warning { fill: #d97855; color: #d97855; }.cityeye-intro-points .is-green, .cityeye-intro-issues .is-green { fill: #087f5b; color: #087f5b; }.cityeye-intro-points .is-amber, .cityeye-intro-issues .is-amber { fill: #c39344; color: #c39344; }
+.cityeye-intro-issues { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; max-width: 300px; margin-top: -5px; }
+.cityeye-intro-issues span { padding: 4px 7px; border: 1px solid currentColor; border-radius: 999px; font-size: 8px; opacity: 0; transform: translateY(5px); animation: cityeye-intro-label .3s ease-out forwards; }
+.cityeye-intro-issues span:nth-child(1) { animation-delay: 2.1s; }.cityeye-intro-issues span:nth-child(2) { animation-delay: 2.3s; }.cityeye-intro-issues span:nth-child(3) { animation-delay: 2.5s; }.cityeye-intro-issues span:nth-child(4) { animation-delay: 2.7s; }.cityeye-intro-issues span:nth-child(5) { animation-delay: 2.9s; }
+.cityeye-intro-skip { position: absolute; right: 22px; bottom: 20px; padding: 7px 10px; border: 1px solid #d7e1dd; border-radius: 999px; color: #64748b; background: transparent; font-size: 10px; cursor: pointer; }
+.cityeye-intro-skip:hover { color: #087f5b; border-color: #087f5b; }
+@keyframes cityeye-intro-brand { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes cityeye-intro-copy { from { opacity: 0; transform: translateY(5px); } to { opacity: .9; transform: none; } }
+@keyframes cityeye-intro-pulse { 50% { transform: scale(1.7); box-shadow: 0 0 0 5px #087f5b22; } }
+@keyframes cityeye-intro-city { to { opacity: 1; transform: perspective(420px) rotateX(52deg) rotateZ(-7deg) scale(1); } }
+@keyframes cityeye-intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes cityeye-intro-buildings { from { opacity: 0; transform: translateY(8px); } to { opacity: .92; transform: none; } }
+@keyframes cityeye-intro-point { to { opacity: 1; transform: scale(1); } }
+@keyframes cityeye-intro-label { to { opacity: 1; transform: none; } }
+@keyframes cityeye-intro-exit { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+@media (prefers-reduced-motion: reduce) { .cityeye-intro, .cityeye-intro * { animation-duration: .35s !important; animation-delay: 0s !important; } .cityeye-intro { animation-delay: 0s !important; } }
 .reference-header { height: 66px; max-width: 1200px; margin: auto; padding: 0 42px; display: flex; align-items: center; justify-content: space-between; }
 .reference-brand { display: inline-flex; align-items: center; gap: 8px; color: #17232c; font-size: 16px; text-decoration: none; }.reference-brand-mark { width: 20px; height: 20px; border: 2px solid #15232b; border-radius: 50%; display: grid; place-items: center; position: relative; }.reference-brand-mark:before { content: ''; width: 9px; height: 9px; border: 1.5px solid #15232b; border-radius: 50%; }.reference-brand-mark i { width: 4px; height: 4px; position: absolute; background: #146e52; border-radius: 50%; }
 .reference-nav { display: flex; align-items: center; gap: 30px; margin-left: auto; margin-right: 80px; }.reference-nav a, .reference-auth button { color: #5b646b; font-size: 10px; text-decoration: none; background: none; border: 0; cursor: pointer; }.reference-nav a { padding: 26px 0 20px; position: relative; }.reference-nav a.is-active:after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #146e52; }.reference-auth { display: flex; align-items: center; gap: 20px; }.reference-auth button:first-child { color: #17232c; font-weight: 600; }

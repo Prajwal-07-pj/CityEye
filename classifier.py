@@ -14,7 +14,7 @@ HOST = "127.0.0.1"
 PORT = int(os.getenv("CLASSIFIER_PORT", "8001"))
 CATEGORIES = [
     "Road / Pothole",
-    "Garbage",
+    "Garbage",  
     "Electrical Hazard",
     "Streetlight",
     "Water Supply",

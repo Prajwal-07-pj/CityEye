@@ -3,6 +3,7 @@ import {
   MapContainer,
   TileLayer,
   Marker,
+  Popup,
   useMap,
   useMapEvents,
 } from "react-leaflet";
@@ -24,6 +25,7 @@ import {
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import CityEyeIntro from "./components/CityEyeIntro";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -239,6 +241,86 @@ function CityMap({ markers = [], onMarkerClick, height = 320, selectable = false
     {pin && <div className="absolute -translate-x-1/2 -translate-y-full" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}><MapPin size={34} color={C.orange} fill={C.orange} strokeWidth={1} /></div>}
     {selectable && <div className="absolute bottom-3 left-3 right-3 text-center text-xs text-white/70 bg-black/30 rounded-lg py-1.5 backdrop-blur-sm">Tap anywhere on the map to move the location pin</div>}
   </div>;
+}
+
+function MapSizeFix() {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => map.invalidateSize(), 0);
+    return () => window.clearTimeout(timer);
+  }, [map]);
+
+  return null;
+}
+
+function reportCoordinates(report) {
+  const lat = Number(report?.location?.lat);
+  const lng = Number(report?.location?.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180
+    ? [lat, lng]
+    : null;
+}
+
+function ReportLocationMap({ report, height = 260 }) {
+  const coordinates = reportCoordinates(report);
+
+  if (!coordinates) {
+    return (
+      <div className="flex items-center justify-center rounded-2xl text-sm" style={{ height, color: C.sub, background: C.bg }}>
+        Location coordinates are unavailable for this report.
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl" style={{ height }}>
+      <MapContainer center={coordinates} zoom={16} scrollWheelZoom style={{ width: "100%", height: "100%" }}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+        <Marker position={coordinates}>
+          <Popup>{report.location.address}</Popup>
+        </Marker>
+        <MapSizeFix />
+      </MapContainer>
+    </div>
+  );
+}
+
+function ReportsLocationMap({ reports, selectedId, onMarkerClick, height = 500 }) {
+  const validReports = reports.filter((report) => reportCoordinates(report));
+  const center = reportCoordinates(validReports[0]) || [18.5204, 73.8567];
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl" style={{ height }}>
+      <MapContainer center={center} zoom={13} scrollWheelZoom style={{ width: "100%", height: "100%" }}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+        {validReports.map((report) => {
+          const coordinates = reportCoordinates(report);
+          return (
+            <Marker
+              key={report.id}
+              position={coordinates}
+              eventHandlers={{ click: () => onMarkerClick?.(report.id) }}
+              opacity={selectedId && selectedId !== report.id ? 0.65 : 1}
+            >
+              <Popup>
+                <strong>{report.title}</strong>
+                <br />
+                {report.location.address}
+              </Popup>
+            </Marker>
+          );
+        })}
+        <MapSizeFix />
+      </MapContainer>
+    </div>
+  );
 }
 
 function BeforeAfterSlider({ before, after }) {
@@ -562,7 +644,6 @@ function CitizenHome({ reports, citizenName, onNavigate, onOpenReport }) {
   const submitted = mine.length;
   const inProgress = mine.filter((r) => ["Assigned", "In Progress", "Awaiting Verification"].includes(r.status)).length;
   const resolved = mine.filter((r) => r.status === "Resolved").length;
-  const markers = reports.map((r, i) => ({ id: r.id, x: 15 + ((i * 13) % 70), y: 15 + ((i * 27) % 70), priority: r.priority }));
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       <Card className="p-10 mb-8 relative overflow-hidden" style={{ background: `linear-gradient(120deg, ${C.navy}, #123A6B)` }}>
@@ -602,7 +683,7 @@ function CitizenHome({ reports, citizenName, onNavigate, onOpenReport }) {
         </Card>
         <Card className="p-5">
           <div className="font-semibold mb-4" style={{ color: C.ink }}>Nearby issues</div>
-          <CityMap markers={markers} height={260} onMarkerClick={(m) => onOpenReport(m.id)} />
+          <ReportsLocationMap reports={reports} height={260} onMarkerClick={onOpenReport} />
         </Card>
       </div>
     </div>
@@ -1173,7 +1254,6 @@ function AdminMapView({ reports, onOpenReport }) {
   const [filterCat, setFilterCat] = useState("All");
   const [selected, setSelected] = useState(null);
   const filtered = filterCat === "All" ? reports : reports.filter((r) => r.category === filterCat);
-  const markers = filtered.map((r, i) => ({ id: r.id, x: 10 + ((i * 17) % 80), y: 10 + ((i * 23) % 80), priority: r.priority }));
   const sel = reports.find((r) => r.id === selected);
   return (
     <div className="p-8">
@@ -1187,7 +1267,7 @@ function AdminMapView({ reports, onOpenReport }) {
       </div>
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
-          <CityMap markers={markers} height={500} highlightId={selected} onMarkerClick={(m) => setSelected(m.id)} />
+          <ReportsLocationMap reports={filtered} selectedId={selected} height={500} onMarkerClick={setSelected} />
           <div className="flex gap-4 mt-3 text-xs flex-wrap">
             {PRIORITIES.map((p) => (
               <span key={p} className="flex items-center gap-1.5" style={{ color: C.sub }}><span className="w-2.5 h-2.5 rounded-full" style={{ background: PRIORITY_COLOR[p] }} />{p}</span>
@@ -1253,6 +1333,10 @@ function AdminIssueReview({ report, onUpdate, notify }) {
           <Row label="Current Status" value={<StatusBadge status={report.status} />} />
         </div>
       </div>
+      <Card className="p-4 mt-6">
+        <div className="font-semibold text-sm mb-3" style={{ color: C.ink }}>Reported location</div>
+        <ReportLocationMap report={report} />
+      </Card>
 
       <Card className="p-5 mt-6" style={{ background: `linear-gradient(120deg, ${C.blue}0D, transparent)`, borderColor: C.blue + "40" }}>
         <div className="flex items-center gap-2 mb-2">
@@ -1403,7 +1487,6 @@ function AdminHeatmap({ reports }) {
   const [activeWard, setActiveWard] = useState(wards[0]);
   const [cat, setCat] = useState("All");
   const filtered = cat === "All" ? reports : reports.filter((r) => r.category === cat);
-  const markers = filtered.map((r, i) => ({ id: r.id, x: 8 + ((r.location.ward * 11 + i * 7) % 84), y: 8 + ((r.location.ward * 17 + i * 13) % 84), priority: r.priority }));
   const wardIssues = reports.filter((r) => r.location.ward === activeWard);
   const wardCat = (id) => wardIssues.filter((r) => r.category === id).length;
   return (
@@ -1416,7 +1499,7 @@ function AdminHeatmap({ reports }) {
         ))}
       </div>
       <div className="grid lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2"><CityMap markers={markers} height={480} /></div>
+        <div className="lg:col-span-2"><ReportsLocationMap reports={filtered} height={480} /></div>
         <Card className="p-5">
           <div className="text-xs font-semibold mb-2" style={{ color: C.sub }}>Select ward</div>
           <div className="flex flex-wrap gap-1.5 mb-4">
@@ -1498,7 +1581,7 @@ function WorkerTaskPage({ report, onUpdate, onGoComplete }) {
 
       <Card className="p-4 mb-4">
         <div className="font-semibold text-sm mb-2" style={{ color: C.ink }}>Location</div>
-        <CityMap markers={[{ id: report.id, x: 50, y: 50, priority: report.priority }]} height={200} />
+        <ReportLocationMap report={report} height={240} />
         <div className="text-xs mt-2 flex items-center gap-1" style={{ color: C.sub }}><MapPin size={12} /> {report.location.address}, Ward {report.location.ward}</div>
       </Card>
 
@@ -1646,6 +1729,10 @@ function OfficerVerifyDetail({ report, onDecision }) {
         <Row label="Completion Date" value={report.timeline["Awaiting Verification"] ? fmtDate(report.timeline["Awaiting Verification"]) : "—"} />
         <Row label="Work Notes" value={report.completionNote || "—"} />
       </div>
+      <Card className="p-4 mb-6">
+        <div className="font-semibold text-sm mb-3" style={{ color: C.ink }}>Reported location</div>
+        <ReportLocationMap report={report} />
+      </Card>
 
       {reworkOpen ? (
         <Card className="p-5">
@@ -1799,7 +1886,7 @@ export default function CityEyeApp() {
     else setView("citizen-track");
   };
 
-  if (view === "landing") return <><style>{FONT_IMPORT}</style><LandingPage C={C} ui={{ Logo, Btn, Card }} onEnter={setView} /></>;
+  if (view === "landing") return <><style>{FONT_IMPORT}</style><LandingPage C={C} ui={{ Logo, Btn, Card }} onEnter={setView} /><CityEyeIntro /></>;
   if (view === "login") return <><style>{FONT_IMPORT}</style><AuthPage C={C} ui={{ Logo, Card, Btn }} onAuth={handleAuth} /></>;
 
   const navMap = { citizen: CITIZEN_NAV, admin: ADMIN_NAV, worker: WORKER_NAV, officer: OFFICER_NAV };
