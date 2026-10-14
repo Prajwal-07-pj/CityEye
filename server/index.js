@@ -32,6 +32,32 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
+const reportSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true, trim: true },
+  citizen: { type: String, required: true, trim: true },
+  citizenEmail: { type: String, required: true, lowercase: true, trim: true, index: true },
+  category: { type: String, required: true },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  citizenImage: { type: String, required: true },
+  workerImage: { type: String, default: null },
+  location: { type: mongoose.Schema.Types.Mixed, required: true },
+  priority: { type: String, required: true },
+  status: { type: String, required: true, default: "Submitted" },
+  department: { type: String, required: true },
+  assignedWorker: { type: String, default: null },
+  workNotes: { type: String, default: "" },
+  completionNote: { type: String, default: "" },
+  reportedDate: { type: Number, required: true },
+  expectedCompletion: { type: Number, required: true },
+  timeline: { type: mongoose.Schema.Types.Mixed, default: {} },
+  feedback: { type: mongoose.Schema.Types.Mixed, default: null },
+  officerVerified: { type: Boolean, default: false },
+  reworkReason: { type: String, default: null },
+}, { timestamps: true, versionKey: false });
+
+const Report = mongoose.model("Report", reportSchema);
+
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 
@@ -87,6 +113,51 @@ app.post("/api/auth/login", async (req, res) => {
     res.json({ user: publicUser(user) });
   } catch {
     res.status(500).json({ message: "Could not sign you in." });
+  }
+});
+
+app.get("/api/reports", async (req, res) => {
+  try {
+    const role = String(req.query.role || "").trim().toLowerCase();
+    const email = normalizeEmail(req.query.email);
+    if (!roles.includes(role) || !email) return res.status(400).json({ message: "A valid role and email are required." });
+
+    const filter = role === "citizen" ? { citizenEmail: email } : {};
+    const reports = await Report.find(filter).sort({ reportedDate: -1 }).lean();
+    res.json({ reports });
+  } catch (error) {
+    console.error("Unable to load reports:", error.message);
+    res.status(500).json({ message: "Could not load previous reports." });
+  }
+});
+
+app.post("/api/reports", async (req, res) => {
+  try {
+    const report = await Report.create({
+      ...req.body,
+      id: String(req.body?.id || "").trim(),
+      citizenEmail: normalizeEmail(req.body?.citizenEmail),
+    });
+    res.status(201).json({ report: report.toObject() });
+  } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ message: "A report with this complaint ID already exists." });
+    console.error("Unable to save report:", error.message);
+    res.status(400).json({ message: "Could not save the report." });
+  }
+});
+
+app.patch("/api/reports/:id", async (req, res) => {
+  try {
+    const report = await Report.findOneAndUpdate(
+      { id: req.params.id },
+      { $set: req.body },
+      { new: true, runValidators: true, lean: true },
+    );
+    if (!report) return res.status(404).json({ message: "Report not found." });
+    res.json({ report });
+  } catch (error) {
+    console.error("Unable to update report:", error.message);
+    res.status(400).json({ message: "Could not update the report." });
   }
 });
 

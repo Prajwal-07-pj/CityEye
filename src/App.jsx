@@ -89,6 +89,19 @@ function readAuthSession() {
   }
 }
 
+async function readApiResponse(response, fallbackMessage) {
+  const body = await response.text();
+  let data = null;
+  try {
+    data = body ? JSON.parse(body) : null;
+  } catch {
+    if (!response.ok) throw new Error(`${fallbackMessage} (HTTP ${response.status}). Restart the CityEye API server.`);
+    throw new Error(fallbackMessage);
+  }
+  if (!response.ok) throw new Error(data?.message || `${fallbackMessage} (HTTP ${response.status}).`);
+  return data;
+}
+
 
 
 /* ============================= CONSTANTS ============================= */
@@ -126,6 +139,7 @@ let idCounter = 4821;
 const nextId = () => `NGN-2026-${String(idCounter++).padStart(6, "0")}`;
 
 const img = (seed) => `https://picsum.photos/seed/${seed}/700/460`;
+const DEFAULT_REPORT_ADDRESS = "Near Ganesh Chowk, Ward 12, Main Road";
 
 /* ============================= MOCK DATA ============================= */
 function buildTimeline(stagesReached, base) {
@@ -639,8 +653,8 @@ const CITIZEN_NAV = [
   { key: "citizen-nearby", label: "Nearby Issues", icon: MapIcon },
 ];
 
-function CitizenHome({ reports, citizenName, onNavigate, onOpenReport }) {
-  const mine = reports.filter((r) => r.citizen === citizenName || r.isDemoNew);
+function CitizenHome({ reports, citizenName, citizenEmail, onNavigate, onOpenReport }) {
+  const mine = reports.filter((r) => r.citizenEmail === citizenEmail || (!r.citizenEmail && (r.citizen === citizenName || r.isDemoNew)));
   const submitted = mine.length;
   const inProgress = mine.filter((r) => ["Assigned", "In Progress", "Awaiting Verification"].includes(r.status)).length;
   const resolved = mine.filter((r) => r.status === "Resolved").length;
@@ -690,8 +704,8 @@ function CitizenHome({ reports, citizenName, onNavigate, onOpenReport }) {
   );
 }
 
-function CitizenMyReports({ reports, citizenName, onOpenReport }) {
-  const mine = reports.filter((r) => r.citizen === citizenName || r.isDemoNew);
+function CitizenMyReports({ reports, citizenName, citizenEmail, onOpenReport }) {
+  const mine = reports.filter((r) => r.citizenEmail === citizenEmail || (!r.citizenEmail && (r.citizen === citizenName || r.isDemoNew)));
   const [filter, setFilter] = useState("All");
   const filtered = filter === "All" ? mine : mine.filter((r) => r.status === filter);
   return (
@@ -768,9 +782,7 @@ function ReportWizard({ onSubmit, citizenName }) {
     lng: 73.8567,
   });
 
-  const [address, setAddress] = useState(
-    "Near Ganesh Chowk, Ward 12, Main Road"
-  );
+  const [address, setAddress] = useState(DEFAULT_REPORT_ADDRESS);
 
   const [submittedReport, setSubmittedReport] = useState(null);
 
@@ -830,7 +842,7 @@ function ReportWizard({ onSubmit, citizenName }) {
   const canNext = {
     1: !!image && imageValidation.status === "valid",
     2: category && categoryMatchesImage && description.trim().length > 5,
-    3: true,
+    3: address.trim().length > 5,
     4: true,
   }[step];
 
@@ -898,7 +910,7 @@ function ReportWizard({ onSubmit, citizenName }) {
         <p className="text-sm max-w-sm mx-auto mb-8" style={{ color: C.sub }}>Your report has been received and will be reviewed by the administration. You'll be notified at every step.</p>
         <div className="flex justify-center gap-3">
           <Btn variant="primary" onClick={() => onSubmit(submittedReport, "track")}>Track Report</Btn>
-          <Btn variant="outline" onClick={() => { setStep(1); setImage(null); setImageValidation({ status: "empty", message: "" }); setCategory(""); setDescription(""); setSubmittedReport(null); }}>Report Another Issue</Btn>
+          <Btn variant="outline" onClick={() => { setStep(1); setImage(null); setImageValidation({ status: "empty", message: "" }); setCategory(""); setDescription(""); setAddress(DEFAULT_REPORT_ADDRESS); setSubmittedReport(null); }}>Report Another Issue</Btn>
         </div>
       </div>
     );
@@ -955,7 +967,7 @@ function ReportWizard({ onSubmit, citizenName }) {
         {step === 3 && (
           <div>
             <div className="font-semibold mb-1" style={{ color: C.ink }}>Location</div>
-            <div className="flex items-center gap-1.5 text-xs font-medium mb-4" style={{ color: C.green }}><MapPin size={13} /> Location detected</div>
+            <div className="flex items-center gap-1.5 text-xs font-medium mb-4" style={{ color: C.green }}><MapPin size={13} /> Select the location on the map or enter it manually</div>
            <div
   className="relative w-full overflow-hidden rounded-2xl"
   style={{ height: 260 }}
@@ -1008,6 +1020,18 @@ function ReportWizard({ onSubmit, citizenName }) {
     Tap anywhere on the map to move the location pin
   </div>
 </div>
+            <label className="block mt-4 text-xs font-semibold" style={{ color: C.sub }} htmlFor="report-address">Address / landmark</label>
+            <input
+              id="report-address"
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
+              placeholder="Enter the street, area, landmark, or ward"
+              className="w-full mt-2 p-3 rounded-xl border text-sm outline-none"
+              style={{ borderColor: C.border }}
+              maxLength={240}
+              required
+            />
+            <div className="mt-1.5 text-xs" style={{ color: C.sub }}>You can edit this address after selecting a point on the map.</div>
             <div className="p-3 rounded-xl" style={{ background: C.bg }}>
   <div style={{ color: C.sub }}>
     Latitude / Longitude
@@ -1803,6 +1827,26 @@ export default function CityEyeApp() {
     }
   }, [currentUser, role, view, selectedId]);
 
+  useEffect(() => {
+    if (!currentUser?.email || !role) return;
+    const loadReports = async () => {
+      try {
+        const params = new URLSearchParams({ role, email: currentUser.email });
+        const response = await fetch(`/api/reports?${params}`);
+        const data = await readApiResponse(response, "Could not load previous reports.");
+        setReports((previous) => {
+          const storedById = new Map(data.reports.map((report) => [report.id, report]));
+          const localReports = previous.filter((report) => !storedById.has(report.id));
+          return [...data.reports, ...localReports];
+        });
+      } catch (error) {
+        console.error("Unable to load previous reports:", error);
+        setToast(error.message || "Could not load previous reports.");
+      }
+    };
+    loadReports();
+  }, [currentUser?.email, role]);
+
   const notify = (audience, text) => {
     setNotifications((prev) => ({ ...prev, [audience]: [{ text, time: Date.now() }, ...prev[audience]] }));
     setToast(text);
@@ -1810,6 +1854,18 @@ export default function CityEyeApp() {
 
   const updateReport = (id, patch) => {
     setReports((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    fetch(`/api/reports/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }).then(async (response) => {
+      if (!response.ok) {
+        await readApiResponse(response, "Could not save the report update.");
+      }
+    }).catch((error) => {
+      console.error("Unable to save report update:", error);
+      setToast(error.message || "Could not save the report update.");
+    });
   };
 
   const handleAuth = (user) => {
@@ -1835,10 +1891,22 @@ export default function CityEyeApp() {
   const selectedReport = reports.find((r) => r.id === selectedId);
 
   // --- Citizen submit report ---
-  const handleCitizenSubmit = (report, action) => {
+  const handleCitizenSubmit = async (report, action) => {
     if (action === "track") { setSelectedId(report.id); setView("citizen-track"); return; }
     setReports((prev) => [report, ...prev]);
-    notify("admin", `New issue reported: ${report.title} (${report.id}).`);
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...report, citizenEmail: currentUser?.email }),
+      });
+      const data = await readApiResponse(response, "Could not save the report.");
+      setReports((prev) => [data.report, ...prev.filter((item) => item.id !== report.id)]);
+      notify("admin", `New issue reported: ${report.title} (${report.id}).`);
+    } catch (error) {
+      console.error("Unable to save submitted report:", error);
+      setToast(error.message || "Could not save the report. Please try again.");
+    }
   };
 
   const handleFeedback = (id, feedback) => updateReport(id, { feedback });
@@ -1909,6 +1977,7 @@ export default function CityEyeApp() {
         selectedReport={selectedReport}
         reports={reports}
         citizenName={citizenName}
+        citizenEmail={currentUser?.email}
         workerName={workerName}
         onCitizenSubmit={handleCitizenSubmit}
         onFeedback={handleFeedback}

@@ -1,255 +1,178 @@
 .ce-intro {
-  --ce-navy: #12212B;
-  --ce-green: #087F5B;
-  --ce-light: #E8F5F0;
-  --ce-bg: #F8FAF9;
-  --ce-muted: #64748B;
   position: fixed;
   inset: 0;
   z-index: 9999;
   display: grid;
   place-items: center;
-  background: var(--ce-bg);
-  color: var(--ce-navy);
-  overflow: hidden;
-  contain: layout paint;
+  background:
+    radial-gradient(60% 50% at 50% 42%, #ffffff 0%, #E8F5F0 70%, #dcefe7 100%);
+  color: #12212B;
+  transition: opacity 450ms ease, transform 450ms ease;
 }
 
 .ce-intro--leaving {
+  opacity: 0;
+  transform: scale(1.015);
   pointer-events: none;
-  animation: ce-overlay-out 0.5s ease-in forwards;
 }
 
-.ce-stage {
-  position: relative;
-  width: min(92vw, 860px);
-  aspect-ratio: 800 / 440;
-  display: grid;
-  place-items: center;
-}
-
-/* ---------- Logo ---------- */
-.ce-logo {
-  position: absolute;
-  inset: 0;
+.ce-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  opacity: 0;
-  animation: ce-logo-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards,
-    ce-logo-out 0.5s ease-in 1s forwards;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* Eye mark */
+.ce-mark {
+  position: relative;
+  width: 84px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 22px;
 }
 
 .ce-eye {
-  width: 56px;
-  height: auto;
-}
-
-.ce-wordmark {
-  font-size: clamp(28px, 4vw, 40px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.ce-tagline {
-  margin: 0;
-  font-size: clamp(13px, 1.6vw, 16px);
-  color: var(--ce-muted);
-  opacity: 0;
-  animation: ce-fade 0.5s ease-out 0.3s forwards;
-}
-
-.ce-dot {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ce-dot-pulse 1.4s ease-in-out infinite;
-}
-
-/* ---------- City ---------- */
-.ce-zoom {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  animation: ce-fade 0.4s ease-out 0.6s forwards;
-  will-change: transform, opacity;
-}
-
-.ce-intro--leaving .ce-zoom {
-  animation: ce-zoom-out 0.5s ease-in forwards;
-}
-
-.ce-city {
   width: 100%;
   height: 100%;
   overflow: visible;
-  transform: rotate(-5deg);
-  animation: ce-drift 3.2s ease-in-out 0.6s forwards;
 }
 
-.ce-road path {
+.ce-eye-outline {
   fill: none;
-  stroke: var(--ce-navy);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: ce-draw 0.7s ease-out calc(0.7s + var(--i) * 0.15s) forwards;
-}
-
-.ce-route {
-  fill: none;
-  stroke: var(--ce-green);
-  stroke-width: 2.4;
-  stroke-linecap: round;
+  stroke: #12212B;
+  stroke-width: 2.2;
   stroke-linejoin: round;
-  opacity: 0.7;
+  stroke-linecap: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: ce-draw 0.9s ease-out 0.9s forwards;
+  animation: ce-draw 900ms cubic-bezier(0.65, 0, 0.35, 1) 150ms forwards;
 }
 
-.ce-building {
+.ce-iris {
+  fill: #E8F5F0;
+  stroke: #087F5B;
+  stroke-width: 2;
+  transform-origin: 20px 14px;
   opacity: 0;
-  transform: translateY(6px);
-  animation: ce-rise 0.4s ease-out calc(0.9s + var(--i) * 0.035s) forwards;
+  transform: scale(0.4);
+  animation: ce-pop 500ms cubic-bezier(0.34, 1.4, 0.64, 1) 800ms forwards;
 }
 
-/* ---------- Markers ---------- */
-.ce-marker {
-  transform-box: fill-box;
-  transform-origin: center;
+.ce-pupil {
+  fill: #087F5B;
+  transform-origin: 20px 14px;
   opacity: 0;
-  animation: ce-marker-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) calc(1.5s + var(--m) * 0.26s) forwards;
+  animation: ce-pop 400ms ease 1000ms forwards,
+             ce-look 1200ms ease-in-out 1500ms forwards;
 }
 
-.ce-marker text,
-.ce-role text {
-  font-size: 9.5px;
-  font-weight: 600;
-  fill: var(--ce-navy);
-}
-
-.ce-ring {
-  fill: none;
-  stroke: var(--c);
-  stroke-width: 1.5;
-  transform-box: fill-box;
-  transform-origin: center;
+/* Soft pulse behind the mark */
+.ce-halo {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(8, 127, 91, 0.22) 0%, rgba(8, 127, 91, 0) 70%);
   opacity: 0;
-  animation: ce-ring 1.6s ease-out calc(1.9s + var(--m) * 0.26s) infinite;
+  animation: ce-halo 1800ms ease-out 900ms infinite;
 }
 
-/* ---------- Connections ---------- */
-.ce-links path {
-  fill: none;
-  stroke: var(--ce-navy);
-  stroke-width: 1;
-  stroke-opacity: 0.28;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: ce-draw 0.5s ease-out calc(2.8s + var(--i) * 0.05s) forwards;
-}
-
-.ce-hub,
-.ce-role {
+/* Text */
+.ce-wordmark {
+  font-size: clamp(32px, 6vw, 44px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
   opacity: 0;
-  animation: ce-fade 0.4s ease-out 2.7s forwards;
+  transform: translateY(8px);
+  animation: ce-rise 600ms ease 1000ms forwards;
 }
 
-.ce-hub-ring {
-  fill: none;
-  stroke: var(--ce-green);
-  stroke-width: 1.5;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ce-ring 1.4s ease-out 3s infinite;
+.ce-tagline {
+  margin: 8px 0 0;
+  font-size: clamp(13px, 2.4vw, 15px);
+  color: rgba(18, 33, 43, 0.62);
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: ce-rise 600ms ease 1200ms forwards;
 }
 
-/* ---------- Skip ---------- */
+/* Thin progress line */
+.ce-progress {
+  width: 120px;
+  height: 2px;
+  margin-top: 28px;
+  border-radius: 2px;
+  background: rgba(18, 33, 43, 0.1);
+  overflow: hidden;
+  opacity: 0;
+  animation: ce-fade 400ms ease 1200ms forwards;
+}
+
+.ce-progress span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: #087F5B;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: ce-fill 1200ms cubic-bezier(0.4, 0, 0.2, 1) 1300ms forwards;
+}
+
+/* Skip */
 .ce-skip {
   position: absolute;
-  right: 24px;
-  bottom: 24px;
-  padding: 8px 16px;
-  border: 1px solid rgba(18, 33, 43, 0.18);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--ce-navy);
+  right: 20px;
+  bottom: 20px;
+  padding: 8px 14px;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
+  color: rgba(18, 33, 43, 0.6);
+  background: transparent;
+  border: 1px solid rgba(18, 33, 43, 0.14);
+  border-radius: 999px;
   cursor: pointer;
+  transition: color 200ms, border-color 200ms, background 200ms;
 }
 
-.ce-skip:hover {
-  background: var(--ce-light);
-}
-
+.ce-skip:hover,
 .ce-skip:focus-visible {
-  outline: 2px solid var(--ce-green);
-  outline-offset: 2px;
+  color: #12212B;
+  border-color: rgba(18, 33, 43, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+  outline: none;
 }
 
-/* ---------- Keyframes ---------- */
-@keyframes ce-logo-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Keyframes */
+@keyframes ce-draw  { to { stroke-dashoffset: 0; } }
+@keyframes ce-pop   { to { opacity: 1; transform: scale(1); } }
+@keyframes ce-rise  { to { opacity: 1; transform: translateY(0); } }
+@keyframes ce-fade  { to { opacity: 1; } }
+@keyframes ce-fill  { to { transform: scaleX(1); } }
+@keyframes ce-halo {
+  0%   { opacity: 0.9; transform: scale(0.7); }
+  100% { opacity: 0;   transform: scale(1.5); }
 }
-@keyframes ce-logo-out {
-  to { opacity: 0; transform: translateY(-12px) scale(0.96); }
-}
-@keyframes ce-fade {
-  to { opacity: 1; }
-}
-@keyframes ce-dot-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.35); opacity: 0.75; }
-}
-@keyframes ce-draw {
-  to { stroke-dashoffset: 0; }
-}
-@keyframes ce-rise {
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes ce-drift {
-  to { transform: rotate(5deg); }
-}
-@keyframes ce-marker-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.8); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes ce-ring {
-  0% { opacity: 0.5; transform: scale(1); }
-  100% { opacity: 0; transform: scale(2); }
-}
-@keyframes ce-zoom-out {
-  from { opacity: 1; transform: scale(1); filter: blur(0); }
-  to { opacity: 0; transform: scale(1.35); filter: blur(4px); }
-}
-@keyframes ce-overlay-out {
-  to { opacity: 0; }
+@keyframes ce-look {
+  0%, 100% { transform: translateX(0); }
+  35%      { transform: translateX(2.5px); }
+  70%      { transform: translateX(-2.5px); }
 }
 
-/* ---------- Reduced motion: logo fade only, ~350ms ---------- */
-.ce-intro--reduced .ce-logo {
-  animation: ce-fade 0.15s ease-out forwards;
+/* Reduced motion: show everything instantly, no movement */
+.ce-intro--reduced *,
+.ce-intro--reduced *::before,
+.ce-intro--reduced *::after {
+  animation: none !important;
+  transition: none !important;
 }
-.ce-intro--reduced .ce-tagline {
-  animation: none;
-  opacity: 1;
-}
-.ce-intro--reduced .ce-dot {
-  animation: none;
-}
-.ce-intro--reduced.ce-intro--leaving {
-  animation-duration: 0.2s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ce-dot,
-  .ce-ring,
-  .ce-hub-ring {
-    animation: none;
-  }
-}
+.ce-intro--reduced .ce-eye-outline { stroke-dashoffset: 0; }
+.ce-intro--reduced .ce-iris,
+.ce-intro--reduced .ce-pupil,
+.ce-intro--reduced .ce-wordmark,
+.ce-intro--reduced .ce-tagline,
+.ce-intro--reduced .ce-progress { opacity: 1; transform: none; }
+.ce-intro--reduced .ce-progress span { transform: scaleX(1); }
+.ce-intro--reduced .ce-halo { display: none; }

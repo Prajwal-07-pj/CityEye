@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 export default function DashboardPage({
   role, view, activeTop, notifications, onNavigate, onLogout, onOpenReport, selectedReport,
-  reports, citizenName, workerName, onCitizenSubmit, onFeedback, onAdminAssign, onAdminNotify,
+  reports, citizenName, citizenEmail, workerName, onCitizenSubmit, onFeedback, onAdminAssign, onAdminNotify,
   onUpdateReport, onWorkerComplete, onWorkerCompleteOpen, onOfficerDecision, nav, pages,
 }) {
   const common = { onNavigate, onLogout };
@@ -9,10 +9,10 @@ export default function DashboardPage({
     <div className="dashboard-shell">
       {role === "citizen" && <>
         <pages.TopNav role="Citizen" active={view} items={nav.citizen} notifCount={notifications.citizen.length} {...common} />
-        {view === "citizen-home" && <pages.CitizenHome reports={reports} citizenName={citizenName} onNavigate={onNavigate} onOpenReport={onOpenReport} />}
+        {view === "citizen-home" && <pages.CitizenHome reports={reports} citizenName={citizenName} citizenEmail={citizenEmail} onNavigate={onNavigate} onOpenReport={onOpenReport} />}
         {view === "citizen-report" && <pages.ReportWizard onSubmit={onCitizenSubmit} citizenName={citizenName} />}
-        {view === "citizen-myreports" && <pages.CitizenMyReports reports={reports} citizenName={citizenName} onOpenReport={onOpenReport} />}
-        {view === "citizen-nearby" && <pages.CitizenHome reports={reports} citizenName={citizenName} onNavigate={onNavigate} onOpenReport={onOpenReport} />}
+        {view === "citizen-myreports" && <pages.CitizenMyReports reports={reports} citizenName={citizenName} citizenEmail={citizenEmail} onOpenReport={onOpenReport} />}
+        {view === "citizen-nearby" && <pages.CitizenHome reports={reports} citizenName={citizenName} citizenEmail={citizenEmail} onNavigate={onNavigate} onOpenReport={onOpenReport} />}
         {view === "citizen-track" && selectedReport && <pages.CitizenReportDetail report={selectedReport} onFeedback={onFeedback} />}
         {view === "notifications" && <pages.NotificationsPage notifications={notifications.citizen} />}
       </>}
